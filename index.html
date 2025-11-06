@@ -64,20 +64,22 @@
   let currentBook = "";
   const pageLength = 1200; // Adjust for your screen size
 
-  // Load book list from books.json
-  fetch('books/books.json')
-    .then(res => res.json())
-    .then(bookArray => {
-      bookArray.forEach(filename => {
-        const name = filename.replace('.txt', '');
-        const li = document.createElement('li');
-        const btn = document.createElement('button');
-        btn.textContent = name;
-        btn.onclick = () => loadBook('books/' + filename);
-        li.appendChild(btn);
-        bookList.appendChild(li);
-      });
-    })
+// Directly define your book list (simpler and works on all browsers)
+const bookArray = [
+  "Alice_in_Wonderland.txt",
+  "The_Great_Gatsby.txt"
+];
+
+bookArray.forEach(filename => {
+  const name = filename.replace('.txt', '');
+  const li = document.createElement('li');
+  const btn = document.createElement('button');
+  btn.textContent = name;
+  btn.onclick = () => loadBook('books/' + filename);
+  li.appendChild(btn);
+  bookList.appendChild(li);
+});
+
     .catch(err => {
       bookList.innerHTML = '<li>Could not load book list.</li>';
     });
