@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart TXT eReader</title>
+<style>
+  body {
+    font-family: serif;
+    margin: 10px;
+    line-height: 1.6;
+    font-size: 18px;
+    background-color: #fff;
+    color: #000;
+    max-width: 480px;
+  }
+  button {
+    padding: 6px 12px;
+    margin: 4px;
+    font-size: 16px;
+  }
+  .dark {
+    background-color: #000;
+    color: #ddd;
+  }
+  #menu, #reader {
+    display: none;
+  }
+  #menu.active, #reader.active {
+    display: block;
+  }
+  h2, p {
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<h2 id="title">My eReader</h2>
+
+<div id="menu" class="active">
+  <p>Select a book:</p>
+  <ul id="bookList"></ul>
+</div>
+
+<div id="reader">
+  <div id="book"></div>
+  <div id="controls">
+    <button onclick="prevPage()">⬅️ Prev</button>
+    <button onclick="toggleTheme()">🌙 Mode</button>
+    <button onclick="nextPage()">Next ➡️</button>
+    <button onclick="backToMenu()">📚 Menu</button>
+  </div>
+</div>
+
+<script>
+  const bookList = document.getElementById('bookList');
+  const bookDiv = document.getElementById('book');
+  const menu = document.getElementById('menu');
+  const reader = document.getElementById('reader');
+
+  let currentText = "";
+  let pageIndex = 0;
+  let currentBook = "";
+  const pageLength = 1200; // Adjust for your screen size
+
+  // Load book list from books.json
+  fetch('books/books.json')
+    .then(res => res.json())
+    .then(bookArray => {
+      bookArray.forEach(filename => {
+        const name = filename.replace('.txt', '');
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.textContent = name;
+        btn.onclick = () => loadBook('books/' + filename);
+        li.appendChild(btn);
+        bookList.appendChild(li);
+      });
+    })
+    .catch(err => {
+      bookList.innerHTML = '<li>Could not load book list.</li>';
+    });
+
+  function loadBook(path) {
+    currentBook = path;
+    fetch(path)
+      .then(res => res.text())
+      .then(text => {
+        currentText = text;
+        // Try to load saved page for this specific book
+        const saved = localStorage.getItem('page_' + currentBook);
+        pageIndex = saved ? parseInt(saved) : 0;
+        showReader();
+      })
+      .catch(err => {
+        bookDiv.textContent = "Error loading book: " + err;
+      });
+  }
+
+  function showReader() {
+    menu.classList.remove('active');
+    reader.classList.add('active');
+    render();
+  }
+
+  function render() {
+    const start = pageIndex * pageLength;
+    const end = start + pageLength;
+    bookDiv.textContent = currentText.slice(start, end);
+    if (currentBook) {
+      localStorage.setItem('page_' + currentBook, pageIndex);
+    }
+  }
+
+  function nextPage() {
+    if ((pageIndex + 1) * pageLength < currentText.length) {
+      pageIndex++;
+      render();
+    }
+  }
+
+  function prevPage() {
+    if (pageIndex > 0) {
+      pageIndex--;
+      render();
+    }
+  }
+
+  function toggleTheme() {
+    document.body.classList.toggle('dark');
+  }
+
+  function backToMenu() {
+    reader.classList.remove('active');
+    menu.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
