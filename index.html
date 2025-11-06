@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Smart TXT eReader</title>
+<title>My eReader</title>
 <style>
   body {
     font-family: serif;
@@ -54,61 +54,66 @@
 </div>
 
 <script>
-  const bookList = document.getElementById('bookList');
-  const bookDiv = document.getElementById('book');
-  const menu = document.getElementById('menu');
-  const reader = document.getElementById('reader');
+  // SIMPLE, COMPATIBLE EREADER SCRIPT
+  var bookList = document.getElementById('bookList');
+  var bookDiv = document.getElementById('book');
+  var menu = document.getElementById('menu');
+  var reader = document.getElementById('reader');
 
-  let currentText = "";
-  let pageIndex = 0;
-  let currentBook = "";
-  const pageLength = 1200; // Adjust for your screen size
+  var currentText = "";
+  var pageIndex = 0;
+  var currentBook = "";
+  var pageLength = 1200; // characters per page
 
-// Directly define your book list (simpler and works on all browsers)
-const bookArray = [
-  "Alice_in_Wonderland.txt",
-  "The_Great_Gatsby.txt"
-];
+  // Define your books manually here
+  var bookArray = [
+    "Alice_in_Wonderland.txt",
+    "The_Great_Gatsby.txt"
+  ];
 
-bookArray.forEach(filename => {
-  const name = filename.replace('.txt', '');
-  const li = document.createElement('li');
-  const btn = document.createElement('button');
-  btn.textContent = name;
-  btn.onclick = () => loadBook('books/' + filename);
-  li.appendChild(btn);
-  bookList.appendChild(li);
-});
+  // Create menu
+  for (var i = 0; i < bookArray.length; i++) {
+    var filename = bookArray[i];
+    var name = filename.replace(".txt", "");
+    var li = document.createElement("li");
+    var btn = document.createElement("button");
+    btn.textContent = name;
+    btn.onclick = (function(file) {
+      return function() { loadBook("books/" + file); };
+    })(filename);
+    li.appendChild(btn);
+    bookList.appendChild(li);
+  }
 
-    .catch(err => {
-      bookList.innerHTML = '<li>Could not load book list.</li>';
-    });
-
+  // Load book file as plain text
   function loadBook(path) {
     currentBook = path;
-    fetch(path)
-      .then(res => res.text())
-      .then(text => {
-        currentText = text;
-        // Try to load saved page for this specific book
-        const saved = localStorage.getItem('page_' + currentBook);
-        pageIndex = saved ? parseInt(saved) : 0;
-        showReader();
-      })
-      .catch(err => {
-        bookDiv.textContent = "Error loading book: " + err;
-      });
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200 || xhr.status === 0) {
+          currentText = xhr.responseText;
+          var saved = localStorage.getItem('page_' + currentBook);
+          pageIndex = saved ? parseInt(saved) : 0;
+          showReader();
+        } else {
+          bookDiv.textContent = "Error loading book.";
+        }
+      }
+    };
+    xhr.open("GET", path, true);
+    xhr.send();
   }
 
   function showReader() {
-    menu.classList.remove('active');
-    reader.classList.add('active');
+    menu.className = "";
+    reader.className = "active";
     render();
   }
 
   function render() {
-    const start = pageIndex * pageLength;
-    const end = start + pageLength;
+    var start = pageIndex * pageLength;
+    var end = start + pageLength;
     bookDiv.textContent = currentText.slice(start, end);
     if (currentBook) {
       localStorage.setItem('page_' + currentBook, pageIndex);
@@ -130,12 +135,16 @@ bookArray.forEach(filename => {
   }
 
   function toggleTheme() {
-    document.body.classList.toggle('dark');
+    if (document.body.className === "dark") {
+      document.body.className = "";
+    } else {
+      document.body.className = "dark";
+    }
   }
 
   function backToMenu() {
-    reader.classList.remove('active');
-    menu.classList.add('active');
+    reader.className = "";
+    menu.className = "active";
   }
 </script>
 
